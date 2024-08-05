@@ -28,17 +28,16 @@ jobs:
 
       - name: Pull content from wiki
         run: |
-          mkdir tmp_wiki
-          cd tmp_wiki
-          git init
-          git config user.name "${{ env.USER_NAME }}"
-          git config user.email "${{ env.USER_EMAIL }}"
-          git pull https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git
+          git config --global user.name "${{ env.USER_NAME }}"
+          git config --global user.email "${{ env.USER_EMAIL }}"
+          git clone "https://${{ secrets.WIKI_ACTION_TOKEN }}@github.com/${{ github.repository }}.wiki.git" tmp_wiki
 
       - name: Push content to wiki
         run: |
           rsync -av --delete docs/ tmp_wiki/ --exclude .git
           cd tmp_wiki
           git add .
-          git commit -m "Update Wiki content" 
-          git push -f --set-upstream https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git master
+          git commit -m "Update Wiki content" || echo "No changes to commit"
+          git push
+        env:
+          GIT_TERMINAL_PROMPT: 0
