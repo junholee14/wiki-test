@@ -1,19 +1,15 @@
 name: Publish docs to Wiki
 
-# Trigger this action only if there are changes pushed to the docs/** directory under the main branch
 on:
   push:
     paths:
-      - docs/** # This includes all sub folders
+      - docs/**
     branches:
-      - main # This can be changed to any branch of your preference
+      - main
 
 env:
-  USER_TOKEN: ${{ secrets.WIKI_ACTION_TOKEN }} # This is the repository secret
-  USER_NAME: ${{ github.actor }} # Enter the username of your (bot) account
-  USER_EMAIL: ${{ github.actor }}@users.noreply.github.com # Enter the e-mail of your (bot) account
-  OWNER: ${{ github.event.repository.owner.name }} # This is the repository owner
-  REPOSITORY_NAME: ${{ github.event.repository.name }} # This is the repository name
+  USER_NAME: ${{ github.actor }}
+  USER_EMAIL: ${{ github.actor }}@users.noreply.github.com
 
 jobs:
   publish_docs_to_wiki:
@@ -23,23 +19,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # 1. Create folder named `tmp_wiki`
-      # 2. Initialize Git
-      # 3. Pull old Wiki content
+      - name: Debug Information
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Repository: ${{ github.repository }}"
+          echo "GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}"
+          git remote -v
+
       - name: Pull content from wiki
         run: |
           mkdir tmp_wiki
           cd tmp_wiki
           git init
-          git config user.name $USER_NAME
-          git config user.email $USER_EMAIL
-          git pull https://$USER_TOKEN@github.com/$OWNER/$REPOSITORY_NAME.wiki.git
-      # 4. Synchronize differences between `docs` & `tmp_wiki`
-      # 5. Push new Wiki content
+          git config user.name "${{ env.USER_NAME }}"
+          git config user.email "${{ env.USER_EMAIL }}"
+          git pull https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git
+
       - name: Push content to wiki
         run: |
           rsync -av --delete docs/ tmp_wiki/ --exclude .git
           cd tmp_wiki
           git add .
           git commit -m "Update Wiki content" 
-          git push -f --set-upstream https://$USER_TOKEN@github.com/$OWNER/$REPOSITORY_NAME.wiki.git master
+          git push -f --set-upstream https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git master
