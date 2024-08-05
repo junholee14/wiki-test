@@ -1,1 +1,1 @@
-SubMenu test
+SubMenu test2
